@@ -1,0 +1,28 @@
+language: go
+os: linux
+arch: arm64-graviton2
+dist: bionic
+
+addons:
+  apt:
+    update: true
+
+go:
+  - 1.15.x
+
+env:
+  global:
+    - GO111MODULE=on
+  
+services:
+  - docker
+
+before_install:
+  - echo "install external dependencies"
+
+script:
+  - make build
+  - make run
+
+after_script:
+  - make clean
