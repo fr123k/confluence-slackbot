@@ -227,14 +227,20 @@ func searchResult(result *confluence.ConfluencePagesSearch, config *config.Confi
 }
 
 func actionHandler(w http.ResponseWriter, r *http.Request) {
+    cfg, err := config.Configuration()
+    if err != nil {
+        fmt.Printf("Could not read configuration: %v", err)
+        os.Exit(1)
+    }
+
     //TODO validate request signature to identify the request is coming from slack
     api := slack.New(
-        "xoxb-1764752828277-1768305869763-bxj7eCV8LRpYrdyFC1eVU3ZX",
+        "", //the token is not used because the payload responseURL is used to send the response
         slack.OptionDebug(false),
         slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
     )
     var payload slack.InteractionCallback
-    err := json.Unmarshal([]byte(r.FormValue("payload")), &payload)
+    err = json.Unmarshal([]byte(r.FormValue("payload")), &payload)
     fmt.Printf("response JSON: %s", r.FormValue("payload"))
     if err != nil {
         fmt.Printf("Could not parse action response JSON: %v", err)
@@ -249,12 +255,6 @@ func actionHandler(w http.ResponseWriter, r *http.Request) {
     }
     var query = strings.Join(queries," or ")
     fmt.Println(query)
-
-    cfg, err := config.Configuration()
-    if err != nil {
-        fmt.Printf("Could not read configuration: %v", err)
-        os.Exit(1)
-    }
 
     confluenceCli := confluenceCli(cfg)
 
