@@ -22,7 +22,7 @@ before_install:
 
 script:
   - make build
-  - make run
+  # - make run
 
 after_script:
   - make clean
