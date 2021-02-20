@@ -1,7 +1,7 @@
 .PHONY: build
 
 go-init:
-	go mod init github.com/fr123k/golang-template
+	go mod init github.com/fr123k/confluence-slackbot
 	go mod vendor
 
 build:
