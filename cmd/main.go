@@ -13,6 +13,7 @@ import (
     "github.com/fr123k/confluence-slackbot/pkg/config"
 
 	confluence "github.com/fr123k/confluence-slackbot/pkg/confluence-cli"
+	"github.com/fr123k/confluence-slackbot/pkg/nlp"
 	// natural language processing
 	prose "github.com/jdkato/prose/v2"
 )
@@ -80,7 +81,7 @@ func main() {
 
             for _, tok := range doc.Tokens() {
                 // fmt.Println(tok.Text, tok.Tag, tok.Label)
-                if ((tok.Tag == "NNP" || tok.Tag == "NNS" || tok.Tag == "NNPS" || tok.Tag == "NN" )&& len(tok.Text) > 2) {
+                if ((tok.Tag == nlp.NOUN_PROPER_SINGULAR || tok.Tag == nlp.NOUN_PLURAL || tok.Tag == nlp.NOUN_PROPER_PLURAL || tok.Tag == nlp.NOUN_SINGULAR )&& len(tok.Text) > 2) {
                     query = append(query, fmt.Sprintf(" title~\"%s\" ", tok.Text))
                     words = append(words, tok.Text)
                 }
@@ -99,7 +100,7 @@ func main() {
                 }
             } else {
                 confluenceCli := confluenceCli(cfg)
-                result = confluenceCli.CQLSearchPagesBy(fmt.Sprintf("label = \"kb-how-to-article\" and (type=page and %s)", text))
+                result = confluenceCli.CQLSearchPagesBy(fmt.Sprintf("(label = \"tutorial\" or label = \"guideline\" or label = \"kb-how-to-article\") and (type=page and %s)", text))
             }
 
             if result.Size > 0 {
