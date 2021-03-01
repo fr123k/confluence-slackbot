@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 //ConfluenceConfig holds the current client configuration
@@ -42,7 +43,7 @@ func Client(config *ConfluenceConfig) *ConfluenceClient {
 	}
 }
 
-func (c *ConfluenceClient) doRequest(method, url string, content, responseContainer interface{}) []byte {
+func (c *ConfluenceClient) doRequest(method, url string, content, responseContainer interface{}) ([]byte, error) {
 	b := new(bytes.Buffer)
 	if content != nil {
 		json.NewEncoder(b).Encode(content)
@@ -56,14 +57,16 @@ func (c *ConfluenceClient) doRequest(method, url string, content, responseContai
 	request.SetBasicAuth(c.username, c.password)
 	request.Header.Add("Content-Type", "application/json; charset=utf-8")
 	if err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		return nil, err
 	}
 	if c.debug {
 		log.Println("Sending request to services...")
 	}
 	response, err := c.client.Do(request)
 	if err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		return nil, err
 	}
 	defer response.Body.Close()
 	if c.debug {
@@ -73,16 +76,18 @@ func (c *ConfluenceClient) doRequest(method, url string, content, responseContai
 	}
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
+		return nil, err
 	}
 	if c.debug {
 		log.Println("Response from service...", string(contents))
 	}
 	if response.StatusCode != 200 {
-		log.Fatal("Bad response code received from server: ", response.Status)
+		log.Errorf("Bad response code received from server: %s", response.Status)
+		return nil, err
 	}
 	json.Unmarshal(contents, responseContainer)
-	return contents
+	return contents, nil
 }
 
 func (c *ConfluenceClient) uploadFile(method, url, content, filename string, responseContainer interface{}) []byte {
