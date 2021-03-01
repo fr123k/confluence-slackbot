@@ -3,7 +3,7 @@ package main
 import (
     "encoding/json"
     "fmt"
-    "log"
+    // "log"
     "net/http"
     "os"
     "strings"
@@ -14,6 +14,8 @@ import (
 
     confluence "github.com/fr123k/confluence-slackbot/pkg/confluence-cli"
     "github.com/fr123k/confluence-slackbot/pkg/nlp"
+
+    log "github.com/sirupsen/logrus"
 )
 
 func confluenceCli(cfg *config.Config) (*confluence.ConfluenceClient) {
@@ -23,6 +25,15 @@ func confluenceCli(cfg *config.Config) (*confluence.ConfluenceClient) {
     confluenceCfg.Password = cfg.ConfigConfluence.Token
     confluenceCfg.Debug = cfg.Debug
     return confluence.Client(&confluenceCfg)
+}
+
+type logger struct {
+    logger *log.Logger
+}
+
+func (l logger) Output(level int, msg string) error {
+    // l.logger.Logf(10, msg)
+    return nil
 }
 
 func main() {
@@ -36,7 +47,8 @@ func main() {
     api := slack.New(
         cfg.ConfigSlack.Token,
         slack.OptionDebug(cfg.Debug),
-        slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
+        slack.OptionLog(logger{logger: log.New()}),
+        // slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
     )
 
     rtm := api.NewRTM()
@@ -224,7 +236,8 @@ func actionHandler(w http.ResponseWriter, r *http.Request) {
     api := slack.New(
         "", //the token is not used because the payload responseURL is used to send the response
         slack.OptionDebug(false),
-        slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
+        slack.OptionLog(logger{logger: log.New()}),
+        // slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
     )
     var payload slack.InteractionCallback
     err = json.Unmarshal([]byte(r.FormValue("payload")), &payload)
