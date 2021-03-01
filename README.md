@@ -143,14 +143,13 @@ It provides a full natural language processing model for at the moment only *eng
 # Changelog
 
 * setup travis build
-
+* add unit test for natural language processing
 
 # Todos
 
-* add unit test for natural language processing
 * add unit test for confluence query building
+* verify slack identity for the interactive button support. [verifying-requests-from-slack](https://api.slack.com/authentication/verifying-requests-from-slack)
 * make the confluence query configurable
 * configure on which messages to respond with search results (direct messages, non thread, thread messages, ...)
 * add commands to perform confluence search results directly
 * add infrastructure deployments examples for aws, hetzner, ...
-* verify slack identity for the interactive button support. [verifying-requests-from-slack](https://api.slack.com/authentication/verifying-requests-from-slack) 

@@ -1,21 +1,19 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
-	"net/http"
-	"os"
-	"strings"
+    "encoding/json"
+    "fmt"
+    "log"
+    "net/http"
+    "os"
+    "strings"
 
-	"github.com/slack-go/slack"
+    "github.com/slack-go/slack"
 
     "github.com/fr123k/confluence-slackbot/pkg/config"
 
-	confluence "github.com/fr123k/confluence-slackbot/pkg/confluence-cli"
-	"github.com/fr123k/confluence-slackbot/pkg/nlp"
-	// natural language processing
-	prose "github.com/jdkato/prose/v2"
+    confluence "github.com/fr123k/confluence-slackbot/pkg/confluence-cli"
+    "github.com/fr123k/confluence-slackbot/pkg/nlp"
 )
 
 func confluenceCli(cfg *config.Config) (*confluence.ConfluenceClient) {
@@ -67,34 +65,22 @@ func main() {
             if msg.ThreadTimestamp != "" {
                 break
             }
-
             fmt.Printf("Message: %s\n", msg.Text)
 
-            // Create a new document with the default configuration:
-            doc, err := prose.NewDocument(msg.Text)
+            document, err := nlp.Parse(msg.Text)
             if err != nil {
                 log.Fatal(err)
             }
-            // var entities = doc.Entities()
-            var words []string
-            var query []string
 
-            for _, tok := range doc.Tokens() {
-                // fmt.Println(tok.Text, tok.Tag, tok.Label)
-                if ((tok.Tag == nlp.NOUN_PROPER_SINGULAR || tok.Tag == nlp.NOUN_PLURAL || tok.Tag == nlp.NOUN_PROPER_PLURAL || tok.Tag == nlp.NOUN_SINGULAR )&& len(tok.Text) > 2) {
-                    query = append(query, fmt.Sprintf(" title~\"%s\" ", tok.Text))
-                    words = append(words, tok.Text)
-                }
-            }
-            // Iterate over the doc's named-entities:
-            // for _, ent := range entities {
-            //     fmt.Println(ent.Text, ent.Label)
-            // }
+            var nouns = document.Nouns()
+            text := nouns.ForEachWithSort(func (entry nlp.Entry) (string, string) {
+                return fmt.Sprintf(" title~\"%s\"", entry.Value), " or"
+            }, func (i int, j int) bool {
+                return nouns.Entries[i].Value < nouns.Entries[j].Value
+            })
 
-            var text = strings.Join(query," or ")
-            fmt.Println(words)
             var result *confluence.ConfluencePagesSearch = nil
-            if len(words) <= 0 {
+            if len(nouns.Words) <= 0 {
                 result = &confluence.ConfluencePagesSearch {
                     Size: 0,
                 }
@@ -117,7 +103,7 @@ func main() {
                             Name: "search",
                             Text: "Yes",
                             Type: "button",
-                            Value: strings.Join(words,","),
+                            Value: strings.Join(nouns.Words,","),
                         },
                         {
                             Name:  "cancel",

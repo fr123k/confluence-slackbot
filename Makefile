@@ -6,7 +6,10 @@ go-init:
 
 build:
 	go build -o build/main cmd/main.go
-	go test -v --cover ./...
+	go test -v -coverprofile=./build/coverage.out ./...
+
+report: build
+	go tool cover -html=./build/coverage.out
 
 run: build
 	./build/main
