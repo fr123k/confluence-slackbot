@@ -1,0 +1,19 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**'
+
+permissions:
+  contents: write
+  id-token: write
+  pull-requests: write
+
+jobs:
+  build-and-release:
+    uses: containifyci/.github/.github/workflows/release.yml@v1
+    secrets: inherit
