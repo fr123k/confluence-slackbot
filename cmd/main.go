@@ -55,7 +55,11 @@ func main() {
     go rtm.ManageConnection()
 
     http.HandleFunc(cfg.Server.ActionURL, actionHandler)
-    go http.ListenAndServe(fmt.Sprintf(":%d",cfg.Server.Port), nil)
+    go func() {
+        if err := http.ListenAndServe(fmt.Sprintf(":%d",cfg.Server.Port), nil); err != nil {
+            log.Errorln(err)
+        }
+    }()
 
     for msg := range rtm.IncomingEvents {
         fmt.Print("Event Received: ")

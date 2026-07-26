@@ -2,7 +2,6 @@ package nlp
 
 import (
     "fmt"
-    "strings"
     "testing"
 )
 
@@ -15,15 +14,6 @@ This component exposes an HTTPS endpoint and must speak to the PHDP.`
 func assert(t *testing.T, err error) {
     if err != nil {
         t.Error(err.Error())
-    }
-}
-
-func assertError(t *testing.T, err error, want string) {
-    if err == nil {
-        t.Errorf("Expected error was nil, got: nil, want: %s", want)
-    }
-    if !strings.Contains(err.Error(), want) {
-        t.Errorf("The error message is wrong, got: %s, want: %s.", err.Error(), want)
     }
 }
 

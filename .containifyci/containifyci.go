@@ -14,5 +14,7 @@ import (
 func main() {
 	os.Chdir("../")
 	opts := build.NewGoServiceBuild("confluence-slackbot")
+	opts.File = "cmd/main.go"
+	opts.Image = ""
 	build.BuildAsync(opts)
 }
