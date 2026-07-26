@@ -1,3 +1,9 @@
 .vscode/settings.json
 build/
 config.yaml
+
+# build artifacts
+artifacts.txt
+confluence-slackbot-darwin-arm64
+confluence-slackbot-linux-arm64
+coverage.txt

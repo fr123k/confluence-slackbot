@@ -3,7 +3,7 @@ package client
 import (
     "bytes"
     "encoding/json"
-    "io/ioutil"
+    "io"
     "mime/multipart"
     "net/http"
     "net/url"
@@ -50,7 +50,10 @@ func Client(config *ConfluenceConfig) *ConfluenceClient {
 func (c *ConfluenceClient) doRequest(method, url string, content, responseContainer interface{}) ([]byte, error) {
     b := new(bytes.Buffer)
     if content != nil {
-        json.NewEncoder(b).Encode(content)
+        if err := json.NewEncoder(b).Encode(content); err != nil {
+            log.Errorln(err)
+            return nil, err
+        }
     }
     furl := c.baseURL + url
     log.Println("Full URL", furl)
@@ -71,12 +74,16 @@ func (c *ConfluenceClient) doRequest(method, url string, content, responseContai
         return nil, err
     }
 
-    defer response.Body.Close()
+    defer func() {
+        if cerr := response.Body.Close(); cerr != nil {
+            log.Errorln(cerr)
+        }
+    }()
     log.Println("Response received, processing response...")
     log.Println("Response status code is", response.StatusCode)
     log.Println(response.Status)
 
-    contents, err := ioutil.ReadAll(response.Body)
+    contents, err := io.ReadAll(response.Body)
     if err != nil {
         log.Errorln(err)
         return nil, err
@@ -87,7 +94,10 @@ func (c *ConfluenceClient) doRequest(method, url string, content, responseContai
         log.Errorf("Bad response code received from server: %s", response.Status)
         return nil, err
     }
-    json.Unmarshal(contents, responseContainer)
+    if err := json.Unmarshal(contents, responseContainer); err != nil {
+        log.Errorln(err)
+        return nil, err
+    }
     return contents, nil
 }
 
@@ -99,10 +109,19 @@ func (c *ConfluenceClient) uploadFile(method, url, content, filename string, res
         log.Errorln(err)
         return nil, err
     }
-    part.Write([]byte(content))
-    writer.WriteField("minorEdit", "true")
+    if _, err := part.Write([]byte(content)); err != nil {
+        log.Errorln(err)
+        return nil, err
+    }
+    if err := writer.WriteField("minorEdit", "true"); err != nil {
+        log.Errorln(err)
+        return nil, err
+    }
     //writer.WriteField("comment", "test")
-    writer.Close()
+    if err := writer.Close(); err != nil {
+        log.Errorln(err)
+        return nil, err
+    }
 
     furl := c.baseURL + url
     log.Println("Full URL", furl)
@@ -122,11 +141,15 @@ func (c *ConfluenceClient) uploadFile(method, url, content, filename string, res
         log.Errorln(err)
         return nil, err
     }
-    defer response.Body.Close()
+    defer func() {
+        if cerr := response.Body.Close(); cerr != nil {
+            log.Errorln(cerr)
+        }
+    }()
     log.Println("Response received, processing response...")
     log.Println("Response status code is", response.StatusCode)
 
-    contents, err := ioutil.ReadAll(response.Body)
+    contents, err := io.ReadAll(response.Body)
     if err != nil {
         log.Errorln(err)
         return nil, err
@@ -135,7 +158,10 @@ func (c *ConfluenceClient) uploadFile(method, url, content, filename string, res
         log.Errorf("Bad response code received from server: %s", response.Status)
         return nil, err
     }
-    json.Unmarshal(contents, responseContainer)
+    if err := json.Unmarshal(contents, responseContainer); err != nil {
+        log.Errorln(err)
+        return nil, err
+    }
     return contents, nil
 }
 
@@ -150,7 +176,9 @@ func (c *ConfluenceClient) AddPage(title, spaceKey, body string, ancestor int64)
     response := &ConfluencePage{}
     page.Body.Storage.Value = body
     //page.Body.Storage.Representation = "wiki"
-    c.doRequest("POST", "/rest/api/content/", page, response)
+    if _, err := c.doRequest("POST", "/rest/api/content/", page, response); err != nil {
+        log.Errorln(err)
+    }
     log.Println("Confluence page added with ID", response.ID, "and version", response.Version.Number)
 }
 
@@ -167,39 +195,52 @@ func (c *ConfluenceClient) UpdatePage(title, spaceKey, body string, ID string, v
     response := &ConfluencePage{}
     page.Body.Storage.Value = body
     //page.Body.Storage.Representation = "wiki"
-    c.doRequest("PUT", "/rest/api/content/"+ID, page, response)
+    if _, err := c.doRequest("PUT", "/rest/api/content/"+ID, page, response); err != nil {
+        log.Errorln(err)
+    }
     log.Println("Confluence page updated with ID", response.ID, "and version", response.Version.Number)
 }
 
 //SearchPages searches for pages in the space that meet the specified criteria
 func (c *ConfluenceClient) SearchPages(title, spaceKey string) (results *ConfluencePageSearch) {
     results = &ConfluencePageSearch{}
-    c.doRequest("GET", "/rest/api/content?title="+url.QueryEscape(title)+"&spaceKey="+url.QueryEscape(spaceKey)+"&expand=version", nil, results)
+    if _, err := c.doRequest("GET", "/rest/api/content?title="+url.QueryEscape(title)+"&spaceKey="+url.QueryEscape(spaceKey)+"&expand=version", nil, results); err != nil {
+        log.Errorln(err)
+    }
     return results
 }
 
 //CQLSearchPages searches for pages in the space that meet the specified criteria
 func (c *ConfluenceClient) CQLSearchPages(title string) (results *ConfluencePagesSearch) {
     results = &ConfluencePagesSearch{}
-    c.doRequest("GET", "/rest/api/search?cql="+url.QueryEscape("(type=page and text~\"" +title+"\")")+"&expand=version", nil, results)
+    if _, err := c.doRequest("GET", "/rest/api/search?cql="+url.QueryEscape("(type=page and text~\"" +title+"\")")+"&expand=version", nil, results); err != nil {
+        log.Errorln(err)
+    }
     return results
 }
 
 //CQLSearchPagesBy searches for pages in the space that meet the specified criteria
 func (c *ConfluenceClient) CQLSearchPagesBy(cql string) (results *ConfluencePagesSearch) {
     results = &ConfluencePagesSearch{}
-    c.doRequest("GET", "/rest/api/search?limit=5&cql="+url.QueryEscape(cql)+"", nil, results)
+    if _, err := c.doRequest("GET", "/rest/api/search?limit=5&cql="+url.QueryEscape(cql)+"", nil, results); err != nil {
+        log.Errorln(err)
+    }
     return results
 }
 
 //AddAttachment adds an attachment to an existing page
 func (c *ConfluenceClient) AddAttachment(content, pageID, filename string) {
     results := &ConfluencePageSearch{}
-    c.uploadFile("PUT", "/rest/api/content/"+pageID+"/child/attachment", content, filename, &results)
+    if _, err := c.uploadFile("PUT", "/rest/api/content/"+pageID+"/child/attachment", content, filename, &results); err != nil {
+        log.Errorln(err)
+    }
 }
 
 //GetLabel searches for pages in the space that meet the specified criteria
 func (c *ConfluenceClient) GetLabel(label, spaceKey string) (results *Label) {
-    c.doRequest("GET", "/rest/api/label?name="+label, nil, &Label{})
+    results = &Label{}
+    if _, err := c.doRequest("GET", "/rest/api/label?name="+label, nil, results); err != nil {
+        log.Errorln(err)
+    }
     return results
 }

@@ -43,9 +43,10 @@ func concat(nlp NLP, tokens []string) ([]Entry, []string) {
 
 func (result Result) ForEach(convert convertFn) string {
     var sb strings.Builder
-    value, sep := convert(result.Entries[0])
+    value, _ := convert(result.Entries[0])
     sb.WriteString(value)
     for _, entry := range result.Entries[1:] {
+        var sep string
         value, sep = convert(entry)
         sb.WriteString(sep)
         sb.WriteString(value)
@@ -95,7 +96,7 @@ func Parse(text string) (*NLP, error) {
             words[tok.Tag] = make(map[string]Entry)
         }
         entry, ok := words[tok.Tag][tok.Text]
-        if ok == false  {
+        if !ok {
             entry = Entry{
                 Value: tok.Text,
                 Count: 1,
