@@ -2,10 +2,10 @@ module .containifyci
 
 go 1.25.5
 
-require github.com/containifyci/engine-ci/client v0.30.7
+require github.com/containifyci/engine-ci/client v0.31.3
 
 require (
-	github.com/containifyci/engine-ci/protos2 v0.26.6 // indirect
+	github.com/containifyci/engine-ci/protos2 v0.27.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
@@ -19,6 +19,6 @@ require (
 	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/grpc v1.83.0 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
+	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
