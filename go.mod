@@ -5,7 +5,7 @@ go 1.25
 require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jdkato/prose/v2 v2.0.0
-	github.com/sirupsen/logrus v1.10.1
+	github.com/sirupsen/logrus v1.10.2
 	github.com/slack-go/slack v0.29.0
 )
 
